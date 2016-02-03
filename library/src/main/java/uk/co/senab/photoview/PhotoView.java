@@ -79,6 +79,11 @@ public class PhotoView extends ImageView implements IPhotoView {
     }
 
     @Override
+    public boolean canTranslate() {
+        return mAttacher.canTranslate();
+    }
+
+    @Override
     public boolean canZoom() {
         return mAttacher.canZoom();
     }
@@ -267,6 +272,12 @@ public class PhotoView extends ImageView implements IPhotoView {
     public void setZoomable(boolean zoomable) {
         mAttacher.setZoomable(zoomable);
     }
+
+    @Override
+    public void setTranslatable(boolean translatable) {
+        mAttacher.setTranslatable(translatable);
+    }
+
 
     @Override
     public Bitmap getVisibleRectangleBitmap() {

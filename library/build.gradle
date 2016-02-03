@@ -1,5 +1,16 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.novoda.bintray-release'
+//apply plugin: 'com.novoda.bintray-release'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.github.dcendents.android-maven'
+
+ext {
+    VERSION_CODE = 124
+    VERSION_NAME = "1.2.4"
+    DESCRIPTION = "Customised PhotoView Library for Slice View"
+    PACKAGE_NAME = "uk.co.senab.photoview"
+    siteUrl = 'https://github.com/ankit209/PhotoView'
+    gitUrl = 'https://github.com/ankit209/PhotoView.git'
+}
 
 android {
     compileSdkVersion 23
@@ -18,13 +29,16 @@ dependencies {
 }
 
 //./gradlew clean build bintrayUpload -PbintrayUser=BINTRAY_USERNAME -PbintrayKey=BINTRAY_KEY -PdryRun=false
-publish {
-    userOrg = 'commit451'
-    groupId = 'com.commit451'
-    artifactId = 'PhotoView'
-    version = '1.2.4'
-    description = 'Implementation of ImageView for Android that supports zooming, by various touch gestures.'
-    website = 'https://github.com/chrisbanes/PhotoView'
-    issueTracker = "https://github.com/chrisbanes/PhotoView/issues"
-    repository = "https://github.com/chrisbanes/PhotoView.git"
-}
+//publish {
+//    userOrg = 'commit451'
+//    groupId = 'com.commit451'
+//    artifactId = 'PhotoView'
+//    version = '1.2.4'
+//    description = 'Implementation of ImageView for Android that supports zooming, by various touch gestures.'
+//    website = 'https://github.com/chrisbanes/PhotoView'
+//    issueTracker = "https://github.com/chrisbanes/PhotoView/issues"
+//    repository = "https://github.com/chrisbanes/PhotoView.git"
+//}
+
+
+apply from: 'https://gist.githubusercontent.com/sarajmunjal/ddb05c0be08384a28c2c/raw/7558cb36a0dd068c0d7705179ac6d7c037f4bcab/loconbintrayupload.gradle'

@@ -64,20 +64,29 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
     static final int EDGE_BOTH = 2;
 
     private float mMinScale = DEFAULT_MIN_SCALE;
-    private float mMidScale = DEFAULT_MID_SCALE;
-    private float mMaxScale = DEFAULT_MAX_SCALE;
+    private float mMidScale = DEFAULT_MIN_SCALE;
+    private float mMaxScale = DEFAULT_MIN_SCALE;
 
     private boolean mAllowParentInterceptOnEdge = true;
     private boolean mBlockParentIntercept = false;
 
-    private static void checkZoomLevels(float minZoom, float midZoom,
+    private void checkZoomLevels(float minZoom, float midZoom,
                                         float maxZoom) {
-        if (minZoom >= midZoom) {
-            throw new IllegalArgumentException(
-                    "MinZoom has to be less than MidZoom");
-        } else if (midZoom >= maxZoom) {
-            throw new IllegalArgumentException(
-                    "MidZoom has to be less than MaxZoom");
+        if (mZoomEnabled){
+            if (minZoom >= midZoom) {
+                throw new IllegalArgumentException(
+                        "MinZoom has to be less than MidZoom");
+            } else if (midZoom >= maxZoom) {
+                throw new IllegalArgumentException(
+                        "MidZoom has to be less than MaxZoom");
+            }
+        }else{
+            // Zooming non existant
+            if (minZoom != DEFAULT_MIN_SCALE || midZoom != DEFAULT_MIN_SCALE
+                    || maxZoom != DEFAULT_MIN_SCALE){
+                throw new IllegalArgumentException(
+                        "MinZoom, MidZoom and MaxZoom all have to the same");
+            }
         }
     }
 
@@ -146,6 +155,7 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
     private int mScrollEdge = EDGE_BOTH;
 
     private boolean mZoomEnabled;
+    private boolean mTranslateEmabled;
     private ScaleType mScaleType = ScaleType.FIT_CENTER;
 
     public PhotoViewAttacher(ImageView imageView) {
@@ -186,6 +196,7 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
 
         mGestureDetector.setOnDoubleTapListener(new DefaultOnDoubleTapListener(this));
 
+        setTranslatable(true);
         // Finally, update the UI so that we're zoomable
         setZoomable(zoomable);
     }
@@ -202,6 +213,11 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
     @Override
     public void setOnScaleChangeListener(OnScaleChangeListener onScaleChangeListener) {
         this.mScaleChangeListener = onScaleChangeListener;
+    }
+
+    @Override
+    public boolean canTranslate() {
+        return mTranslateEmabled;
     }
 
     @Override
@@ -416,7 +432,7 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
         ImageView imageView = getImageView();
 
         if (null != imageView) {
-            if (mZoomEnabled) {
+            if (canScaleOrTranslate()) {
                 final int top = imageView.getTop();
                 final int right = imageView.getRight();
                 final int bottom = imageView.getBottom();
@@ -455,6 +471,12 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
                             scaleFactor, focusX, focusY));
         }
 
+        if (DEBUG) {
+            LogManager.getLogger().d(
+                    LOG_TAG,
+                    "onScale: getScale = " + getScale() + " maxScale = " + mMaxScale);
+        }
+
         if (getScale() < mMaxScale || scaleFactor < 1f) {
             if (null != mScaleChangeListener) {
                 mScaleChangeListener.onScaleChange(scaleFactor, focusX, focusY);
@@ -469,7 +491,7 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
     public boolean onTouch(View v, MotionEvent ev) {
         boolean handled = false;
 
-        if (mZoomEnabled && hasDrawable((ImageView) v)) {
+        if (canScaleOrTranslate() && hasDrawable((ImageView) v)) {
             ViewParent parent = v.getParent();
             switch (ev.getAction()) {
                 case ACTION_DOWN:
@@ -634,6 +656,10 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
                                 "Scale must be within the range of minScale and maxScale");
                 return;
             }
+            if (DEBUG) {
+                LogManager.getLogger().d(LOG_TAG, "setScale: scale = " + scale +
+                        ", mMinScale = " + mMinScale + ", mMaxScale = " + mMaxScale);
+            }
 
             if (animate) {
                 imageView.post(new AnimatedZoomRunnable(getScale(), scale,
@@ -657,7 +683,25 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
 
     @Override
     public void setZoomable(boolean zoomable) {
+        if (DEBUG){
+            LogManager.getLogger().d(LOG_TAG,"setZoomable: zoomable = " + zoomable);
+        }
         mZoomEnabled = zoomable;
+        if (zoomable){
+            mMinScale = DEFAULT_MIN_SCALE;
+            mMidScale = DEFAULT_MID_SCALE;
+            mMaxScale = DEFAULT_MAX_SCALE;
+        }else{
+            mMinScale = DEFAULT_MIN_SCALE;
+            mMidScale = DEFAULT_MIN_SCALE;
+            mMaxScale = DEFAULT_MIN_SCALE;
+        }
+        update();
+    }
+
+    @Override
+    public void setTranslatable(boolean translatable) {
+        mTranslateEmabled = translatable;
         update();
     }
 
@@ -665,7 +709,7 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
         ImageView imageView = getImageView();
 
         if (null != imageView) {
-            if (mZoomEnabled) {
+            if (canScaleOrTranslate()) {
                 // Make sure we using MATRIX Scale Type
                 setImageViewScaleTypeMatrix(imageView);
 
@@ -676,6 +720,10 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
                 resetMatrix();
             }
         }
+    }
+
+    private boolean canScaleOrTranslate(){
+        return mZoomEnabled || mTranslateEmabled;
     }
 
     @Override
@@ -876,8 +924,16 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
 
         mBaseMatrix.reset();
 
+//        final float widthScale = (!mZoomEnabled) ? DEFAULT_MIN_SCALE : (viewWidth / drawableWidth);
+//        final float heightScale = (!mZoomEnabled) ? DEFAULT_MIN_SCALE : (viewHeight / drawableHeight);
+
         final float widthScale = viewWidth / drawableWidth;
         final float heightScale = viewHeight / drawableHeight;
+
+        if (DEBUG) {
+            LogManager.getLogger().d(LOG_TAG, "updateBaseMatrix: mZoomEnabled = " + mZoomEnabled +
+                    ", widthScale = " + widthScale + ", heightScale = " + heightScale);
+        }
 
         if (mScaleType == ScaleType.CENTER) {
             mBaseMatrix.postTranslate((viewWidth - drawableWidth) / 2F,

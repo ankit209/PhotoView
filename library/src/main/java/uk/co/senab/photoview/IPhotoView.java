@@ -31,7 +31,14 @@ public interface IPhotoView {
     public static final int DEFAULT_ZOOM_DURATION = 200;
 
     /**
-     * Returns true if the PhotoView is set to allow zooming of Photos.
+     * Returns true if the PhotoView is set to allow translation matrix Operation
+     *
+     * @return true if the PhotoView allows translation of photos.
+     */
+    boolean canTranslate();
+
+    /**
+     * Returns true if the PhotoView is set to allow zooming of Photos .
      *
      * @return true if the PhotoView allows zooming.
      */
@@ -292,12 +299,19 @@ public interface IPhotoView {
     void setScaleType(ImageView.ScaleType scaleType);
 
     /**
-     * Allows you to enable/disable the zoom functionality on the ImageView. When disable the
-     * ImageView reverts to using the FIT_CENTER matrix.
+     * Allows you to enable/disable the zoom functionality on the ImageView.
      *
      * @param zoomable - Whether the zoom functionality is enabled.
      */
     void setZoomable(boolean zoomable);
+
+    /**
+     * Allows you to enable/disable the translate functionality on the ImageView. When disable the
+     * ImageView reverts to using the FIT_CENTER matrix.
+     *
+     * @param translatable - Whether the translate functionality is enabled.
+     */
+    void setTranslatable(boolean translatable);
 
     /**
      * Enables rotation via PhotoView internal functions. Name is chosen so it won't collide with
