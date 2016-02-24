@@ -65,7 +65,7 @@ public class SimpleSampleActivity extends Activity {
         mImageView.setImageDrawable(bitmap);
 
         // The MAGIC happens here!
-        mAttacher = new PhotoViewAttacher(mImageView);
+        mAttacher = new PhotoViewAttacher(mImageView, false, true);
 
         // Lets attach some listeners, not required though!
         mAttacher.setOnMatrixChangeListener(new MatrixChangeListener());
