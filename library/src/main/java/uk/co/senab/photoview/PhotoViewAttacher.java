@@ -84,7 +84,7 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
             // Zooming non existant
             if (minZoom != DEFAULT_MIN_SCALE || midZoom != DEFAULT_MIN_SCALE
                     || maxZoom != DEFAULT_MIN_SCALE){
-                throw new IllegalArgumentException(
+                throw new IllegalStateException(
                         "MinZoom, MidZoom and MaxZoom all have to the same");
             }
         }
@@ -159,10 +159,10 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
     private ScaleType mScaleType = ScaleType.FIT_CENTER;
 
     public PhotoViewAttacher(ImageView imageView) {
-        this(imageView, true);
+        this(imageView, true, true);
     }
 
-    public PhotoViewAttacher(ImageView imageView, boolean zoomable) {
+    public PhotoViewAttacher(ImageView imageView, boolean zoomable, boolean translatable) {
         mImageView = new WeakReference<>(imageView);
 
         imageView.setDrawingCacheEnabled(true);
@@ -196,7 +196,11 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
 
         mGestureDetector.setOnDoubleTapListener(new DefaultOnDoubleTapListener(this));
 
-        setTranslatable(true);
+        if (zoomable && !translatable){
+            throw new IllegalArgumentException("Can't set Zoomable if Translatable is not set");
+        }
+
+        setTranslatable(translatable);
         // Finally, update the UI so that we're zoomable
         setZoomable(zoomable);
     }
@@ -477,7 +481,7 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
                     "onScale: getScale = " + getScale() + " maxScale = " + mMaxScale);
         }
 
-        if (getScale() < mMaxScale || scaleFactor < 1f) {
+        if (mZoomEnabled && (getScale() < mMaxScale || scaleFactor < 1f)) {
             if (null != mScaleChangeListener) {
                 mScaleChangeListener.onScaleChange(scaleFactor, focusX, focusY);
             }
@@ -683,6 +687,9 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
 
     @Override
     public void setZoomable(boolean zoomable) {
+        if (zoomable && !canTranslate()){
+            throw new IllegalStateException("Can't set Zoomable if Translatable is not set");
+        }
         if (DEBUG){
             LogManager.getLogger().d(LOG_TAG,"setZoomable: zoomable = " + zoomable);
         }
@@ -701,6 +708,9 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
 
     @Override
     public void setTranslatable(boolean translatable) {
+        if (!translatable && canZoom()){
+            throw new IllegalStateException("Can't make Translatable false if zoomable is not true");
+        }
         mTranslateEmabled = translatable;
         update();
     }

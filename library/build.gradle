@@ -4,8 +4,8 @@ apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.dcendents.android-maven'
 
 ext {
-    VERSION_CODE = 124
-    VERSION_NAME = "1.2.4"
+    VERSION_CODE = 125
+    VERSION_NAME = "1.2.5"
     DESCRIPTION = "Customised PhotoView Library for Slice View"
     PACKAGE_NAME = "uk.co.senab.photoview"
     siteUrl = 'https://github.com/ankit209/PhotoView'
@@ -19,8 +19,8 @@ android {
     defaultConfig {
         minSdkVersion 4
         targetSdkVersion 23
-        versionCode 124
-        versionName "1.2.4"
+        versionCode 125
+        versionName "1.2.5"
     }
 }
 
